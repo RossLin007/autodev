@@ -1,0 +1,25 @@
+{
+  "name": "nightly-auto-dev",
+  "version": "1.0.0",
+  "description": "Nightly automatic development system",
+  "scripts": {
+    "lint": "echo 'Running linting...'",
+    "test": "echo 'Running tests...'",
+    "build": "echo 'Building project...'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/username/autodev.git"
+  },
+  "keywords": [
+    "automation",
+    "development",
+    "github-actions",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "continue": "^0.0.1"
+  }
+}

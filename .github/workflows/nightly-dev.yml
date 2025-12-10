@@ -1,0 +1,154 @@
+name: Nightly Auto Development
+
+on:
+  schedule:
+    # 每天凌晨 2 点触发 (UTC 时间)
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: '指定要处理的 Issue 编号（可选）'
+        required: false
+        type: string
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
+jobs:
+  setup-and-pick-task:
+    runs-on: ubuntu-latest
+    outputs:
+      issue-number: ${{ steps.pick-task.outputs.issue-number }}
+      issue-title: ${{ steps.pick-task.outputs.issue-title }}
+      issue-body: ${{ steps.pick-task.outputs.issue-body }}
+      branch-name: ${{ steps.create-branch.outputs.branch-name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            npm install
+          else
+            echo "No package.json found, skipping npm install"
+          fi
+
+      - name: Pick task
+        id: pick-task
+        run: |
+          chmod +x .github/scripts/pick-task.sh
+          .github/scripts/pick-task.sh "${{ github.event.inputs.issue_number }}"
+
+      - name: Create development branch
+        id: create-branch
+        run: |
+          chmod +x .github/scripts/create-branch.sh
+          .github/scripts/create-branch.sh "${{ steps.pick-task.outputs.issue-number }}"
+
+  develop-and-test:
+    needs: setup-and-pick-task
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          ref: ${{ needs.setup-and-pick-task.outputs.branch-name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          if [ -f "package.json" ]; then
+            npm install
+          else
+            echo "No package.json found, skipping npm install"
+          fi
+
+      - name: Setup Continue.dev CLI
+        run: |
+          npm install -g continue
+
+      - name: Configure Continue
+        run: |
+          mkdir -p ~/.continue
+          cp atai.config.yaml ~/.continue/config.yaml
+
+      - name: Run development task
+        run: |
+          chmod +x .github/scripts/run-development.sh
+          .github/scripts/run-development.sh "${{ needs.setup-and-pick-task.outputs.issue-title }}" "${{ needs.setup-and-pick-task.outputs.issue-body }}"
+
+      - name: Run linting
+        id: lint
+        continue-on-error: true
+        run: |
+          if [ -f "package.json" ] && npm run lint --if-present; then
+            echo "lint_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "lint_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run tests
+        id: test
+        continue-on-error: true
+        run: |
+          if [ -f "package.json" ] && npm test --if-present; then
+            echo "test_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "test_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Fix issues if needed
+        if: steps.lint.outputs.lint_success == 'false' || steps.test.outputs.test_success == 'false'
+        run: |
+          mkdir -p ~/.continue
+          cp atai.config.yaml ~/.continue/config.yaml
+          chmod +x .github/scripts/fix-issues.sh
+          .github/scripts/fix-issues.sh "lint: ${{ steps.lint.outputs.lint_success }}, test: ${{ steps.test.outputs.test_success }}"
+
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "Auto: implement ${{ needs.setup-and-pick-task.outputs.issue-title }}"
+          git push origin ${{ needs.setup-and-pick-task.outputs.branch-name }}
+
+  create-pr-and-report:
+    needs: [setup-and-pick-task, develop-and-test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create Pull Request
+        id: create-pr
+        run: |
+          chmod +x .github/scripts/create-pr.sh
+          .github/scripts/create-pr.sh "${{ needs.setup-and-pick-task.outputs.branch-name }}" "${{ needs.setup-and-pick-task.outputs.issue-title }}" "${{ needs.setup-and-pick-task.outputs.issue-number }}"
+
+      - name: Generate daily report
+        run: |
+          chmod +x .github/scripts/generate-report.sh
+          .github/scripts/generate-report.sh "${{ needs.setup-and-pick-task.outputs.issue-number }}" "${{ needs.setup-and-pick-task.outputs.issue-title }}" "${{ steps.create-pr.outputs.pr-url }}"
