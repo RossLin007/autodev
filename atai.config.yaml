@@ -1,0 +1,29 @@
+name: atai
+version: 1.0.9
+schema: v1
+models:
+  - uses: deepseek/deepseek-chat
+    with:
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+  - uses: google/gemini-2.5-pro
+    with:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  - name: Z-GLM4
+    model: glm-4.6
+    apiKey: 428594fe0ae63f93f4df13f31ce1ec6e.f6oxi3Oh4NRrSlEo
+    apiBase: https://open.bigmodel.cn/api/paas/v4
+    roles:
+      - chat
+      - edit
+      - apply
+      - autocomplete
+    provider: openai
+  - uses: google/gemini-3-pro-preview
+    with:
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+context:
+  - uses: continuedev/diff-context
+  - uses: continuedev/terminal-context
+  - uses: continuedev/file-context
+mcpServers:
+  - uses: upstash/context7-mcp

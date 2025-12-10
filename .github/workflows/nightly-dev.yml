@@ -86,11 +86,6 @@ jobs:
         run: |
           npm install -g continue
 
-      - name: Configure Continue
-        run: |
-          mkdir -p ~/.continue
-          cp atai.config.yaml ~/.continue/config.yaml
-
       - name: Run development task
         run: |
           chmod +x .github/scripts/run-development.sh
@@ -119,8 +114,6 @@ jobs:
       - name: Fix issues if needed
         if: steps.lint.outputs.lint_success == 'false' || steps.test.outputs.test_success == 'false'
         run: |
-          mkdir -p ~/.continue
-          cp atai.config.yaml ~/.continue/config.yaml
           chmod +x .github/scripts/fix-issues.sh
           .github/scripts/fix-issues.sh "lint: ${{ steps.lint.outputs.lint_success }}, test: ${{ steps.test.outputs.test_success }}"
 
