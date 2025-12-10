@@ -50,7 +50,11 @@ ISSUE_BODY=$(echo "$ISSUE_DATA" | jq -r '.body')
 # 输出结果供后续步骤使用
 echo "issue-number=$ISSUE_NUMBER" >> $GITHUB_OUTPUT
 echo "issue-title=$ISSUE_TITLE" >> $GITHUB_OUTPUT
-echo "issue-body=$ISSUE_BODY" >> $GITHUB_OUTPUT
+{
+  echo "issue-body<<EOF"
+  echo "$ISSUE_BODY"
+  echo "EOF"
+} >> $GITHUB_OUTPUT
 
 # 添加评论表明该 issue 已被选中
 gh issue comment "$ISSUE_NUMBER" --body "🌙 夜间自动开发系统已选择此任务，正在处理中..."
