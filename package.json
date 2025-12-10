@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "Nightly automatic development system",
   "scripts": {
-    "lint": "echo 'Running linting...'",
-    "test": "echo 'Running tests...'",
+    "lint": "eslint .",
+    "test": "jest --passWithNoTests",
     "build": "echo 'Building project...'"
   },
   "repository": {
@@ -20,6 +20,8 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "continue": "^0.0.1"
+    "continue": "^0.0.1",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0"
   }
 }
