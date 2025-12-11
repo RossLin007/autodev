@@ -34,6 +34,14 @@ git push -u origin main
 - 获取你的 API Key
 - 添加到仓库的 Secrets 中，命名为 `ANTHROPIC_API_KEY`
 
+### Z_GLM4_API_KEY
+- 访问 https://open.bigmodel.cn/ 或你在 `apiBase` 所指向的服务控制台
+- 在控制台中创建或查看你的 API Key（如果已有请在服务端撤销并重新生成，确保安全）
+- 在 GitHub 仓库页面：`Settings` → `Secrets` → `Actions` → `New repository secret`
+  - `Name`: `Z_GLM4_API_KEY`
+  - `Value`: 粘贴生成的 API Key
+  - 保存后，CI/Action 可以通过 `${{ secrets.Z_GLM4_API_KEY }}` 访问该密钥
+
 ## 4. 测试系统
 
 ### 添加测试任务

@@ -10,7 +10,7 @@ models:
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
   - name: Z-GLM4
     model: glm-4.6
-    apiKey: 428594fe0ae63f93f4df13f31ce1ec6e.f6oxi3Oh4NRrSlEo
+    apiKey: ${{ secrets.Z_API_KEY }}
     apiBase: https://open.bigmodel.cn/api/paas/v4
     roles:
       - chat

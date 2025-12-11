@@ -5,7 +5,8 @@
   "scripts": {
     "lint": "eslint .",
     "test": "jest --passWithNoTests",
-    "build": "echo 'Building project...'"
+    "build": "echo 'Building project...'",
+    "start": "echo 'Hello World'"
   },
   "repository": {
     "type": "git",
